@@ -38,12 +38,13 @@ jobs:
     permissions:
       contents: write
     env:
-      OUT: ${{ runner.temp }}/out
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # the runner context is not allowed in job-level env, so OUT is set here
+      - run: echo "OUT=$RUNNER_TEMP/out" >> "$GITHUB_ENV"
       - run: pip install cryptography==43.0.0 jsonschema==4.23.0
 
       - name: Next seq
