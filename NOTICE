@@ -11,8 +11,10 @@ Third-party data included in the released lists
    The file is itself a merge; the sections used are:
    - "hostsVN Gambling VN" and "hostsVN Adult VN": hostsVN, https://github.com/bigdargon/hostsVN - MIT,
      Copyright (c) BigDargon. Full text: LICENSES/hostsVN-MIT.txt
-   - "Snuff hosts": merged by StevenBlack/hosts under its MIT licence; the original source of that section
-     is named in the upstream repository.
+   - "Snuff hosts": Sinfonietta/hostfiles, https://github.com/Sinfonietta/hostfiles - MIT,
+     Copyright (c) 2016 Sinfonietta. Full text: LICENSES/Sinfonietta-hostfiles-MIT.txt
+     (source named in StevenBlack/hosts extensions/porn/sinfonietta-snuff/update.json, licence read from the
+     Sinfonietta repository 2026-10-30).
    (Checked 2026-10-29: license.txt of StevenBlack/hosts and LICENSE of hostsVN read directly.)
 
 Own data
