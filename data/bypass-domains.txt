@@ -1,0 +1,25 @@
+# DoH / DoT / proxy-bootstrap hostnames, always blocked (category BYPASS, match EXACT). One name per line.
+# Required by the contract (feed section 3.1): the first three; build.py fails without them.
+use-application-dns.net
+lite.duckduckgo.com
+html.duckduckgo.com
+# Public DoH resolver hostnames (own compilation of published resolver endpoints, review by Khai/Khoa)
+dns.google
+dns64.dns.google
+cloudflare-dns.com
+mozilla.cloudflare-dns.com
+chrome.cloudflare-dns.com
+one.one.one.one
+dns.quad9.net
+dns9.quad9.net
+dns10.quad9.net
+dns11.quad9.net
+doh.opendns.com
+dns.adguard-dns.com
+dns-unfiltered.adguard-dns.com
+dns.nextdns.io
+doh.cleanbrowsing.org
+dns.sb
+doh.dns.sb
+dns.mullvad.net
+doh.mullvad.net

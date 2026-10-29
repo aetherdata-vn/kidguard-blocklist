@@ -1,0 +1,26 @@
+KidGuard blocklist - third-party data and licences
+
+The scripts and the KidGuard-authored lists (data/*.txt except upstream-derived output) are MIT, see LICENSE.
+The licence holder name and the licence choice for the data are provisional (question 039 in the product repo).
+
+Third-party data included in the released lists
+-----------------------------------------------
+1. StevenBlack/hosts, alternate "gambling-porn-only"
+   https://github.com/StevenBlack/hosts - MIT, Copyright (c) Steven Black. Full text: LICENSES/StevenBlack-hosts-MIT.txt
+   Released as lists sb-adult and sb-gambling (hostnames only, filtered, sorted, deduplicated, split by category).
+   The file is itself a merge; the sections used are:
+   - "hostsVN Gambling VN" and "hostsVN Adult VN": hostsVN, https://github.com/bigdargon/hostsVN - MIT,
+     Copyright (c) BigDargon. Full text: LICENSES/hostsVN-MIT.txt
+   - "Snuff hosts": merged by StevenBlack/hosts under its MIT licence; the original source of that section
+     is named in the upstream repository.
+   (Checked 2026-10-29: license.txt of StevenBlack/hosts and LICENSE of hostsVN read directly.)
+
+Own data
+--------
+- data/vn-gambling.txt: domain names compiled from lists the Vietnamese Ministry of Information and Communications
+  published (sources in the file header). No third-party list text copied.
+- data/bypass-*.txt, data/never-block*.txt, data/public-suffixes.txt: own compilation of public resolver endpoints.
+
+Not shipped: vn-gambling-candidates.txt (tier B, unverified) is not in this repository.
+
+Build-time tools (not part of the released data): Python 3, cryptography (Apache-2.0 / BSD-3-Clause), jsonschema (MIT).

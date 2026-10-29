@@ -1,0 +1,104 @@
+name: release
+
+# pull_request / push: build + check only (no secret is available to fork PRs, and nothing is signed).
+# schedule / manual run on main: build, check, sign with BLOCKLIST_SIGNING_KEY, publish lists-v<seq>.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish even if no list changed"
+        type: boolean
+        default: false
+
+concurrency: release
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install cryptography==43.0.0 jsonschema==4.23.0
+      - name: Build and check (BYPASS entries, required categories, list rules)
+        run: |
+          python scripts/build.py "$RUNNER_TEMP/out" 1
+          python scripts/check.py "$RUNNER_TEMP/out"
+
+  release:
+    needs: check
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      OUT: ${{ runner.temp }}/out
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: pip install cryptography==43.0.0 jsonschema==4.23.0
+
+      - name: Next seq
+        id: seq
+        run: |
+          last=$(git tag -l 'lists-v*' | sed 's/^lists-v//' | sort -n | tail -1)
+          echo "last=${last:-0}" >> "$GITHUB_OUTPUT"
+          echo "seq=$(( ${last:-0} + 1 ))" >> "$GITHUB_OUTPUT"
+
+      - name: Build and check
+        run: |
+          python scripts/build.py "$OUT" "${{ steps.seq.outputs.seq }}"
+          python scripts/check.py "$OUT"
+
+      - name: Skip when nothing changed
+        id: changed
+        run: |
+          last=${{ steps.seq.outputs.last }}
+          if [ "$last" != 0 ] && [ "${{ inputs.force }}" != "true" ] \
+             && git show "lists-v$last:dist/manifest.json" > "$RUNNER_TEMP/prev.json" \
+             && python scripts/unchanged.py "$RUNNER_TEMP/prev.json" "$OUT/payload.json"; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sign and verify against the published key
+        if: steps.changed.outputs.publish == 'true'
+        env:
+          BLOCKLIST_SIGNING_KEY: ${{ secrets.BLOCKLIST_SIGNING_KEY }}
+        run: |
+          key_id=$(cut -d: -f1 PUBLIC_KEY)
+          python scripts/sign.py sign "$OUT" "$key_id"
+          # fails if the secret is not the key whose public half is in PUBLIC_KEY
+          python scripts/sign.py verify "$OUT/manifest.json" "$(cat PUBLIC_KEY)"
+
+      - name: Publish tag, feed branch and release
+        if: steps.changed.outputs.publish == 'true'
+        run: |
+          seq=${{ steps.seq.outputs.seq }}
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # jsDelivr serves repository files: tag lists-v<seq> holds dist/ (immutable)
+          git switch --orphan "rel-$seq"
+          mkdir dist
+          cp "$OUT"/manifest.json "$OUT"/*.gz dist/
+          git add dist
+          git commit -q -m "lists-v$seq"
+          git tag "lists-v$seq"
+          # branch feed holds only manifest.json (mirror discovery URL)
+          git switch --orphan "feed-$seq"
+          cp "$OUT/manifest.json" .
+          git add manifest.json
+          git commit -q -m "feed lists-v$seq"
+          git push origin "refs/tags/lists-v$seq"
+          git push --force origin "feed-$seq:refs/heads/feed"
+          gh release create "lists-v$seq" "$OUT/manifest.json" "$OUT"/*.gz \
+            --title "lists-v$seq" --notes "Signed blocklist release, seq $seq. See README for verification."

@@ -1,0 +1,28 @@
+# Names the build must never emit in any list (feed section 4). One name per line.
+# A name N removes: the entry N itself, and for SUFFIX lists any entry that covers N (parent domain of N).
+# Feed and update hosts (ADR-007 section 4.1)
+github.com
+githubusercontent.com
+objects.githubusercontent.com
+release-assets.githubusercontent.com
+raw.githubusercontent.com
+cdn.jsdelivr.net
+family.cloudflare-dns.com
+# Windows connectivity and update
+msftconnecttest.com
+msftncsi.com
+windowsupdate.com
+microsoft.com
+live.com
+# Major platforms a child legitimately uses
+google.com
+googleapis.com
+gstatic.com
+youtube.com
+googlevideo.com
+facebook.com
+zalo.me
+zaloapp.com
+wikipedia.org
+apple.com
+cloudflare.com

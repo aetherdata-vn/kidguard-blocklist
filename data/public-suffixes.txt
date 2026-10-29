@@ -1,0 +1,19 @@
+# shortcut: small hand list of multi-label suffixes, not the full Public Suffix List (MPL-2.0, kept out of the repo).
+# Upgrade when a list entry that is a bare suffix gets through.
+com.vn
+net.vn
+org.vn
+edu.vn
+gov.vn
+info.vn
+biz.vn
+name.vn
+co.uk
+org.uk
+com.au
+co.jp
+com.cn
+co.in
+com.br
+com.sg
+co.id

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:kidguard:contracts:blocklist-manifest:v1",
+  "title": "KidGuard blocklist feed v1 - manifest.json envelope and decoded payload",
+  "description": "Source of truth: docs/architecture/contracts/blocklist-feed.md. The file manifest.json is an Envelope. Its payload, after base64url decoding and signature verification, is a Payload. Validate the Payload only after the signature check. Consumers ignore unknown fields; an unknown category makes that list ignored; format other than 1 is rejected.",
+  "$ref": "#/$defs/Envelope",
+  "$defs": {
+    "Base64Url": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+    "Envelope": {
+      "type": "object",
+      "required": ["payload", "signatures"],
+      "properties": {
+        "payload": { "$ref": "#/$defs/Base64Url", "maxLength": 87382, "description": "base64url (no padding) of the payload JSON bytes; decoded size <= 64 KiB." },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["keyId", "alg", "sig"],
+            "properties": {
+              "keyId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,31}$" },
+              "alg": { "type": "string", "description": "Only ES256 is accepted; other values are skipped." },
+              "sig": { "$ref": "#/$defs/Base64Url", "minLength": 86, "maxLength": 86, "description": "ECDSA P-256 / SHA-256 over 'KidGuard-lists-manifest-v1\\n' || payload bytes; IEEE P1363 r||s (64 bytes)." }
+            }
+          }
+        }
+      }
+    },
+    "Category": { "type": "string", "enum": ["ADULT", "GAMBLING", "CARD_GAMES", "SOCIAL", "LOTTERY", "BYPASS"], "description": "Closed for the producer, open for consumers (unknown -> list ignored)." },
+    "Payload": {
+      "type": "object",
+      "required": ["format", "seq", "createdAtMs", "lists"],
+      "properties": {
+        "format": { "const": 1 },
+        "seq": { "type": "integer", "minimum": 1, "description": "Release sequence; the only ordering field (blocklist-feed.md section 5 rule 3)." },
+        "createdAtMs": { "type": "integer", "minimum": 0, "description": "Informational only." },
+        "lists": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/List" } }
+      }
+    },
+    "List": {
+      "type": "object",
+      "required": ["listId", "category", "kind", "version", "path", "sha256", "bytes", "entries", "license", "source"],
+      "properties": {
+        "listId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,47}$", "not": { "enum": ["parent", "study"] } },
+        "category": { "$ref": "#/$defs/Category" },
+        "kind": { "type": "string", "enum": ["DOMAINS", "IPS"] },
+        "match": { "type": "string", "enum": ["SUFFIX", "EXACT"], "description": "Required when kind = DOMAINS; absent for IPS." },
+        "version": { "type": "string", "maxLength": 32 },
+        "path": { "type": "string", "pattern": "^[a-z0-9-]+\\.[0-9a-f]{16}\\.txt\\.gz$" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 16777216 },
+        "entries": { "type": "integer", "minimum": 0, "maximum": 500000 },
+        "license": { "type": "string", "maxLength": 64 },
+        "source": { "type": "string", "maxLength": 200 },
+        "sourceUrl": { "type": "string", "pattern": "^https://", "maxLength": 300 }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "DOMAINS" } } }, "then": { "required": ["match"] } },
+        { "if": { "properties": { "kind": { "const": "IPS" } } }, "then": { "properties": { "category": { "const": "BYPASS" } }, "not": { "required": ["match"] } } }
+      ]
+    }
+  }
+}

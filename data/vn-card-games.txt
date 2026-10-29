@@ -1,0 +1,2 @@
+# KidGuard - VN reward card-game domains (CARD_GAMES). One registrable domain per line, suffix-matched.
+# Empty on purpose: no card-game-only source exists yet (question 039). Khoa fills this by PR.
